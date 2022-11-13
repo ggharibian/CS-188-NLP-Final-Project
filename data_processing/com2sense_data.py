@@ -29,6 +29,10 @@ class Com2SenseDataProcessor(DataProcessor):
 
         # TODO: Label to Int mapping, dict type.
         self.label2int = {"True": 1, "False": 0}
+        self.str2bool = {"True": True, "False": False}
+        self.domain2int = {"physical": 1, "social": 2, "time": 3}
+        self.scenario2int = {"comparison": 1, "causal": 2}
+        self.numeracy2int = self.label2int
 
     def get_labels(self):
         """See base class."""
@@ -76,14 +80,14 @@ class Com2SenseDataProcessor(DataProcessor):
             
             sent_1 = example_pair['sent_1']
             sent_2 = example_pair['sent_2']
-            label_1 = example_pair['label_1'] if 'label_1' in example_pair else None
-            label_2 = example_pair['label_2'] if 'label_2' in example_pair else None
-            domain = example_pair['domain']
-            scenario = example_pair['scenario']
-            numeracy = example_pair['numeracy']
+            label_1 = self.label2int[example_pair['label_1']] if 'label_1' in example_pair else None
+            label_2 = self.label2int[example_pair['label_2']] if 'label_2' in example_pair else None
+            domain = self.domain2int[example_pair['domain']] if 'domain' in example_pair else None
+            scenario = self.scenario2int[example_pair['scenario']] if 'scenario' in example_pair else None
+            numeracy = self.numeracy2int[example_pair['numeracy']] if 'numeracy' in example_pair else None
             
-            example_1 = Coms2SenseSingleSentenceExample(str(2 * i), sent_1, label_1, domain, scenario, numeracy)
-            example_2 = Coms2SenseSingleSentenceExample(str(2 * i + 1), sent_2, label_2, domain, scenario, numeracy)
+            example_1 = Coms2SenseSingleSentenceExample(str(i), sent_1, label_1, domain, scenario, numeracy)
+            example_2 = Coms2SenseSingleSentenceExample(str(i), sent_2, label_2, domain, scenario, numeracy)
             
             examples.append(example_1)
             examples.append(example_2)

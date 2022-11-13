@@ -195,6 +195,7 @@ def train(args, train_dataset, model, tokenizer):
         epoch_iterator = tqdm(train_dataloader, desc="Iteration",
                               disable=args.local_rank not in [-1, 0])
         for step, batch in enumerate(epoch_iterator):
+            print('batch:', batch)
             # Skip past any already trained steps if resuming training
             if steps_trained_in_current_epoch > 0:
                 steps_trained_in_current_epoch -= 1
@@ -216,29 +217,34 @@ def train(args, train_dataset, model, tokenizer):
                 inputs["token_type_ids"] = None
 
             if args.training_phase == "pretrain":
-                masked_inputs, lm_labels = mask_tokens(
-                    inputs["input_ids"], tokenizer, args)
+                masked_inputs, lm_labels = mask_tokens(inputs["input_ids"], tokenizer, args)
                 inputs["input_ids"] = masked_inputs
                 inputs["labels"] = lm_labels
 
             ##################################################
             # TODO: Please finish the following training loop.
-            raise NotImplementedError("Please finish the TODO!")
-
+            # raise NotImplementedError("Please finish the TODO!")
+            
             # TODO: See the HuggingFace transformers doc to properly get
             # the loss from the model outputs.
-            raise NotImplementedError("Please finish the TODO!")
+            # raise NotImplementedError("Please finish the TODO!")
+            
+            pred = model(inputs['input_ids'], inputs['attention_mask'], inputs['labels'])
 
             if args.n_gpu > 1:
                 # Applies mean() to average on multi-gpu parallel training.
                 loss = loss.mean()
 
             # Handles the `gradient_accumulation_steps`, i.e., every such
-            # steps we update the model, so the loss needs to be devided.
-            raise NotImplementedError("Please finish the TODO!")
+            # steps we update the model, so the loss needs to be derived.
+            # raise NotImplementedError("Please finish the TODO!")
+            
+            loss = pred[0]
 
             # Loss backward.
-            raise NotImplementedError("Please finish the TODO!")
+            # raise NotImplementedError("Please finish the TODO!")
+            
+            loss.backward()
 
             # End of TODO.
             ##################################################
@@ -388,17 +394,24 @@ def evaluate(args, model, tokenizer, prefix="", data_split="test"):
 
             ##################################################
             # TODO: Please finish the following eval loop.
-            raise NotImplementedError("Please finish the TODO!")
+            # raise NotImplementedError("Please finish the TODO!")
 
             # TODO: See the HuggingFace transformers doc to properly get the loss
             # AND the logits from the model outputs, it can simply be 
             # indexing properly the outputs as tuples.
             # Make sure to perform a `.mean()` on the eval loss and add it
             # to the `eval_loss` variable.
-            raise NotImplementedError("Please finish the TODO!")
-
+            # raise NotImplementedError("Please finish the TODO!")
+            
+            pred = model(inputs['input_ids'], inputs['attention_mask'], inputs['labels'])
+            loss, logits = pred[:2]
+            
+            
+        
             # TODO: Handles the logits with Softmax properly.
-            raise NotImplementedError("Please finish the TODO!")
+            # raise NotImplementedError("Please finish the TODO!")
+            
+            
 
             # End of TODO.
             ##################################################
@@ -621,10 +634,14 @@ def main():
     # for essential args.
 
     # TODO: Huggingface configs.
-    raise NotImplementedError("Please finish the TODO!")
+    # raise NotImplementedError("Please finish the TODO!")
+    
+    config = AutoConfig.from_pretrained(args.model_name_or_path)
 
     # TODO: Tokenizer.
-    raise NotImplementedError("Please finish the TODO!")
+    # raise NotImplementedError("Please finish the TODO!")
+    
+    tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path)
 
     # TODO: Defines the model. We use the MLM model when 
     # `training_phase` is `pretrain` otherwise we use the
@@ -636,7 +653,11 @@ def main():
             config=config,
         )
     else:
-        raise NotImplementedError("Please finish the TODO!")
+        # raise NotImplementedError("Please finish the TODO!")
+        model = AutoModelForSequenceClassification.from_pretrained(
+            args.model_name_or_path,
+            config=config,
+        )
 
     # End of TODO.
     ##################################################
