@@ -195,7 +195,6 @@ def train(args, train_dataset, model, tokenizer):
         epoch_iterator = tqdm(train_dataloader, desc="Iteration",
                               disable=args.local_rank not in [-1, 0])
         for step, batch in enumerate(epoch_iterator):
-            print('batch:', batch)
             # Skip past any already trained steps if resuming training
             if steps_trained_in_current_epoch > 0:
                 steps_trained_in_current_epoch -= 1
@@ -224,12 +223,13 @@ def train(args, train_dataset, model, tokenizer):
             ##################################################
             # TODO: Please finish the following training loop.
             # raise NotImplementedError("Please finish the TODO!")
-            
+
             # TODO: See the HuggingFace transformers doc to properly get
             # the loss from the model outputs.
             # raise NotImplementedError("Please finish the TODO!")
             
-            pred = model(inputs['input_ids'], inputs['attention_mask'], inputs['labels'])
+            pred = model(inputs['input_ids'], inputs['attention_mask'], labels = inputs['labels'])
+            loss = pred[0]
 
             if args.n_gpu > 1:
                 # Applies mean() to average on multi-gpu parallel training.
@@ -239,8 +239,9 @@ def train(args, train_dataset, model, tokenizer):
             # steps we update the model, so the loss needs to be derived.
             # raise NotImplementedError("Please finish the TODO!")
             
-            loss = pred[0]
-
+            if step % args.gradient_accumulation_steps == 0:
+                optimizer.step()
+    
             # Loss backward.
             # raise NotImplementedError("Please finish the TODO!")
             
@@ -403,13 +404,16 @@ def evaluate(args, model, tokenizer, prefix="", data_split="test"):
             # to the `eval_loss` variable.
             # raise NotImplementedError("Please finish the TODO!")
             
-            pred = model(inputs['input_ids'], inputs['attention_mask'], inputs['labels'])
+            pred = model(inputs['input_ids'], inputs['attention_mask'], labels = inputs['labels'])
             loss, logits = pred[:2]
             
-            
-        
+            print('loss:', loss)
+            print('logits:', logits)            
+
             # TODO: Handles the logits with Softmax properly.
             # raise NotImplementedError("Please finish the TODO!")
+            
+            soft_logits = torch.softmax(logits, -1)
             
             
 
@@ -463,7 +467,8 @@ def evaluate(args, model, tokenizer, prefix="", data_split="test"):
             # the following metrics: accuracy, precision, recall and F1-score.
             # Please also make your sci-kit learn scores able to take the
             # `args.score_average_method` for the `average` argument.
-            raise NotImplementedError("Please finish the TODO!")
+            # raise NotImplementedError("Please finish the TODO!")
+            accuracy = accuracy_score()
             # TODO: Pairwise accuracy.
             if args.task_name == "com2sense":
                 raise NotImplementedError("Please finish the TODO!")
@@ -664,7 +669,7 @@ def main():
 
     # Loads models onto the device (gpu or cpu).
     model.to(args.device)
-    print(model)
+    # print(model)
     args.model_type = config.model_type
 
     logger.info("Training/evaluation parameters %s", args)
