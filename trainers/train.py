@@ -222,11 +222,9 @@ def train(args, train_dataset, model, tokenizer):
 
             ##################################################
             # TODO: Please finish the following training loop.
-            # raise NotImplementedError("Please finish the TODO!")
 
             # TODO: See the HuggingFace transformers doc to properly get
             # the loss from the model outputs.
-            # raise NotImplementedError("Please finish the TODO!")
             
             pred = model(inputs['input_ids'], inputs['attention_mask'], labels = inputs['labels'])
             loss = pred[0]
@@ -237,13 +235,11 @@ def train(args, train_dataset, model, tokenizer):
 
             # Handles the `gradient_accumulation_steps`, i.e., every such
             # steps we update the model, so the loss needs to be derived.
-            # raise NotImplementedError("Please finish the TODO!")
             
             if step % args.gradient_accumulation_steps == 0:
                 optimizer.step()
     
             # Loss backward.
-            # raise NotImplementedError("Please finish the TODO!")
             
             loss.backward()
 
@@ -314,6 +310,17 @@ def train(args, train_dataset, model, tokenizer):
                     # directory such as `checkpoint-best`, the saved weights
                     # will be overwritten each time your model reaches a best
                     # thus far evaluation results on the dev set.
+                    
+                    print('results:', results)
+                    
+                    torch.save({
+                        'epoch': args.num_train_epochs, 
+                        'model_state_dict': model.state_dict(), 
+                        'optimizer_state_dict': optimizer.state_dict(),
+                        'loss': loss
+                        }, os.path.join(output_dir, 'checkpoint-best'))
+                    
+                    
 
             if args.max_steps > 0 and global_step > args.max_steps:
                 epoch_iterator.close()
@@ -407,16 +414,20 @@ def evaluate(args, model, tokenizer, prefix="", data_split="test"):
             pred = model(inputs['input_ids'], inputs['attention_mask'], labels = inputs['labels'])
             loss, logits = pred[:2]
             
-            print('loss:', loss)
-            print('logits:', logits)            
+            if args.n_gpu > 1:
+                # Applies mean() to average on multi-gpu parallel training.
+                loss = loss.mean()       
+                
+            eval_loss = eval_loss + loss
 
             # TODO: Handles the logits with Softmax properly.
             # raise NotImplementedError("Please finish the TODO!")
             
-            soft_logits = torch.softmax(logits, -1)
+            logits = torch.softmax(logits, -1) # WHAT ARE WE SUPPOSED TO DO HERE?
             
+            # print('logits:', logits)
+            # # print('preds:', preds)
             
-
             # End of TODO.
             ##################################################
 
@@ -440,6 +451,7 @@ def evaluate(args, model, tokenizer, prefix="", data_split="test"):
     # Organize the predictions.
     preds = np.reshape(preds, (-1, preds.shape[-1]))
     preds = np.argmax(preds, axis=-1)
+    
 
     if has_label or args.training_phase == "pretrain":
         # Computes overall average eavl loss.
@@ -468,10 +480,17 @@ def evaluate(args, model, tokenizer, prefix="", data_split="test"):
             # Please also make your sci-kit learn scores able to take the
             # `args.score_average_method` for the `average` argument.
             # raise NotImplementedError("Please finish the TODO!")
-            accuracy = accuracy_score()
+            
+            eval_acc = eval_acc + accuracy_score(labels, preds)
+            eval_prec = eval_prec + precision_score(labels, preds, average=args.score_average_method)
+            eval_recall = eval_recall + recall_score(labels, preds, average=args.score_average_method)
+            eval_f1 = eval_f1 + f1_score(labels, preds, average=args.score_average_method)
+            
             # TODO: Pairwise accuracy.
             if args.task_name == "com2sense":
-                raise NotImplementedError("Please finish the TODO!")
+                # raise NotImplementedError("Please finish the TODO!")
+                eval_pairwise_acc = eval_pairwise_acc + pairwise_accuracy(guids, preds, labels)
+                
 
         # End of TODO.
         ##################################################

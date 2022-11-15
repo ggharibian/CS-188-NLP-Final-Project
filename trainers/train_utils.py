@@ -32,15 +32,13 @@ def pairwise_accuracy(guids, preds, labels):
     # predictions and labels w.r.t the `guid`. 
     # raise NotImplementedError("Please finish the TODO!")
     
-    correct_count = 0
-    
     guid_set = set(guids)
     
     for guid in guid_set:
         indices = [i for i, item in enumerate(guids) if item == guid]
-        correct_count = correct_count + 1 if (np.all(preds[indices] == labels[indices])) else correct_count
+        acc = acc + 1 if (np.all(preds[indices] == labels[indices])) else acc
         
-    return correct_count / len(guid_set)
+    acc = acc / len(guid_set)
         
     # End of TODO
     ########################################################
