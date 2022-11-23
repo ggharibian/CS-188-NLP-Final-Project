@@ -311,14 +311,19 @@ def train(args, train_dataset, model, tokenizer):
                     # will be overwritten each time your model reaches a best
                     # thus far evaluation results on the dev set.
                     
-                    print('results:', results)
+                    best_model_path = os.path.join(output_dir, '..', args.model_type + '_best')
+                    old_checkpoint_exists = os.path.exists(best_model_path)
                     
-                    torch.save({
-                        'epoch': args.num_train_epochs, 
-                        'model_state_dict': model.state_dict(), 
-                        'optimizer_state_dict': optimizer.state_dict(),
-                        'loss': loss
-                        }, os.path.join(output_dir, 'checkpoint-best'))
+                    if old_checkpoint_exists:
+                        old_checkpoint = torch.load(best_model_path)
+                    
+                    if not old_checkpoint_exists or loss < old_checkpoint['loss']:
+                        torch.save({
+                            'epoch': args.num_train_epochs, 
+                            'model_state_dict': model.state_dict(), 
+                            'optimizer_state_dict': optimizer.state_dict(),
+                            'loss': loss
+                            }, best_model_path)
                     
                     
 
@@ -402,14 +407,14 @@ def evaluate(args, model, tokenizer, prefix="", data_split="test"):
 
             ##################################################
             # TODO: Please finish the following eval loop.
-            # raise NotImplementedError("Please finish the TODO!")
+
 
             # TODO: See the HuggingFace transformers doc to properly get the loss
             # AND the logits from the model outputs, it can simply be 
             # indexing properly the outputs as tuples.
             # Make sure to perform a `.mean()` on the eval loss and add it
             # to the `eval_loss` variable.
-            # raise NotImplementedError("Please finish the TODO!")
+
             
             pred = model(inputs['input_ids'], inputs['attention_mask'], labels = inputs['labels'])
             loss, logits = pred[:2]
@@ -421,9 +426,9 @@ def evaluate(args, model, tokenizer, prefix="", data_split="test"):
             eval_loss = eval_loss + loss
 
             # TODO: Handles the logits with Softmax properly.
-            # raise NotImplementedError("Please finish the TODO!")
+
             
-            logits = torch.softmax(logits, -1) # WHAT ARE WE SUPPOSED TO DO HERE?
+            logits = torch.softmax(logits, -1)
             
             # print('logits:', logits)
             # # print('preds:', preds)
@@ -479,17 +484,17 @@ def evaluate(args, model, tokenizer, prefix="", data_split="test"):
             # the following metrics: accuracy, precision, recall and F1-score.
             # Please also make your sci-kit learn scores able to take the
             # `args.score_average_method` for the `average` argument.
-            # raise NotImplementedError("Please finish the TODO!")
+
             
-            eval_acc = eval_acc + accuracy_score(labels, preds)
-            eval_prec = eval_prec + precision_score(labels, preds, average=args.score_average_method)
-            eval_recall = eval_recall + recall_score(labels, preds, average=args.score_average_method)
-            eval_f1 = eval_f1 + f1_score(labels, preds, average=args.score_average_method)
+            eval_acc = accuracy_score(labels, preds)
+            eval_prec = precision_score(labels, preds, average=args.score_average_method)
+            eval_recall = recall_score(labels, preds, average=args.score_average_method)
+            eval_f1 = f1_score(labels, preds, average=args.score_average_method)
             
             # TODO: Pairwise accuracy.
             if args.task_name == "com2sense":
-                # raise NotImplementedError("Please finish the TODO!")
-                eval_pairwise_acc = eval_pairwise_acc + pairwise_accuracy(guids, preds, labels)
+
+                eval_pairwise_acc = pairwise_accuracy(guids, preds, labels)
                 
 
         # End of TODO.
@@ -658,12 +663,11 @@ def main():
     # for essential args.
 
     # TODO: Huggingface configs.
-    # raise NotImplementedError("Please finish the TODO!")
+
     
     config = AutoConfig.from_pretrained(args.model_name_or_path)
 
     # TODO: Tokenizer.
-    # raise NotImplementedError("Please finish the TODO!")
     
     tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path)
 
@@ -677,7 +681,7 @@ def main():
             config=config,
         )
     else:
-        # raise NotImplementedError("Please finish the TODO!")
+
         model = AutoModelForSequenceClassification.from_pretrained(
             args.model_name_or_path,
             config=config,
