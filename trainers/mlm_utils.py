@@ -54,26 +54,36 @@ def mask_tokens(inputs, tokenizer, args, special_tokens_mask=None):
     
     labels_device, inputs_device = labels.device, inputs.device
     
-    if labels_device != 'cpu':
-        labels = labels.to('cpu')
-    if inputs_device != 'cpu':
-        inputs = inputs.to('cpu')
+    # if labels_device != 'cpu':
+    #     labels = labels.to('cpu')
+    # if inputs_device != 'cpu':
+    #     inputs = inputs.to('cpu')
     
     prob_matrix = torch.full(inputs.size(), args.mlm_probability)
     reduced_prob_matrix = prob_matrix.masked_fill(special_tokens_mask, 0)
     remaining_tokens = torch.bernoulli(reduced_prob_matrix)
-    labels = labels.masked_fill(remaining_tokens == 0, 0)
+    
+    if labels_device != 'cpu':
+        labels = labels.masked_fill(remaining_tokens.to(labels_device) == 0, 0)
+    else:
+        labels = labels.masked_fill(remaining_tokens == 0, 0)
 
     # Remember that the "non-masked" parts should be filled with ignore index.
     
-    labels = labels.masked_fill(remaining_tokens == 0, args.mlm_ignore_index)
+    if labels_device != 'cpu':
+        labels = labels.masked_fill(remaining_tokens.to(labels_device) == 0, args.mlm_ignore_index)
+    else:
+        labels = labels.masked_fill(remaining_tokens == 0, args.mlm_ignore_index)
     
     # For 80% of the time, we will replace masked input tokens with  the
     # tokenizer.mask_token (e.g. for BERT it is [MASK] for for RoBERTa it is
     # <mask>, check tokenizer documentation for more details)
     
     chosen_eighty_percent_of__masked_tokens = torch.bernoulli(torch.full(inputs.size(), 0.8).masked_fill(remaining_tokens != 1, 0))
-    inputs = inputs.masked_fill(chosen_eighty_percent_of__masked_tokens == 1, tokenizer.convert_tokens_to_ids(tokenizer.mask_token))
+    if inputs_device:
+        inputs = inputs.masked_fill(chosen_eighty_percent_of__masked_tokens.to(inputs_device) == 1, tokenizer.convert_tokens_to_ids(tokenizer.mask_token))
+    else:
+        inputs = inputs.masked_fill(chosen_eighty_percent_of__masked_tokens == 1, tokenizer.convert_tokens_to_ids(tokenizer.mask_token))
     remaining_tokens = remaining_tokens.masked_fill(chosen_eighty_percent_of__masked_tokens == 1, 0)
 
     # For 10% of the time, we replace masked input tokens with random word.
@@ -82,12 +92,15 @@ def mask_tokens(inputs, tokenizer, args, special_tokens_mask=None):
     # with those of the masked positions, i.e. "~indices_replaced".
     
     chosen_ten_percent_of__masked_tokens = torch.bernoulli(torch.full(inputs.size(), 0.1).masked_fill(remaining_tokens != 1, 0))
-    inputs = inputs.masked_fill(chosen_ten_percent_of__masked_tokens == 1, 0) + torch.randint(0, len(tokenizer), inputs.size()).masked_fill(chosen_ten_percent_of__masked_tokens != 1, 0)
-    
-    if labels_device != 'cpu':
-        labels = labels.to(labels_device)
     if inputs_device != 'cpu':
-        inputs = inputs.to(inputs_device)
+        inputs = inputs.masked_fill(chosen_ten_percent_of__masked_tokens.to(inputs_device) == 1, 0) + torch.randint(0, len(tokenizer), inputs.size()).masked_fill(chosen_ten_percent_of__masked_tokens != 1, 0).to(inputs_device)
+    else:
+        inputs = inputs.masked_fill(chosen_ten_percent_of__masked_tokens == 1, 0) + torch.randint(0, len(tokenizer), inputs.size()).masked_fill(chosen_ten_percent_of__masked_tokens != 1, 0)
+    
+    # if labels_device != 'cpu':
+    #     labels = labels.to(labels_device)
+    # if inputs_device != 'cpu':
+    #     inputs = inputs.to(inputs_device)
     # End of TODO
     ##################################################
 
