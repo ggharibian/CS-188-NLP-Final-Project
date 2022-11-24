@@ -44,29 +44,50 @@ def mask_tokens(inputs, tokenizer, args, special_tokens_mask=None):
     ##################################################
     # Optional TODO: this is an optional TODO that can get you more familiarized
     # with masked language modeling.
-
+    
     # First sample a few tokens in each sequence for the MLM, with probability
     # `args.mlm_probability`.
     # Hint: you may find these functions handy: `torch.full`, Tensor's built-in
     # function `masked_fill_`, and `torch.bernoulli`.
     # Check the inputs to the bernoulli function and use other hinted functions
     # to construct such inputs.
-    raise NotImplementedError("Please finish the TODO!")
+    
+    labels_device, inputs_device = labels.device, inputs.device
+    
+    if labels_device != 'cpu':
+        labels = labels.to('cpu')
+    if inputs_device != 'cpu':
+        inputs = inputs.to('cpu')
+    
+    prob_matrix = torch.full(inputs.size(), args.mlm_probability)
+    reduced_prob_matrix = prob_matrix.masked_fill(special_tokens_mask, 0)
+    remaining_tokens = torch.bernoulli(reduced_prob_matrix)
+    labels = labels.masked_fill(remaining_tokens == 0, 0)
 
     # Remember that the "non-masked" parts should be filled with ignore index.
-    raise NotImplementedError("Please finish the TODO!")
-
+    
+    labels = labels.masked_fill(remaining_tokens == 0, args.mlm_ignore_index)
+    
     # For 80% of the time, we will replace masked input tokens with  the
     # tokenizer.mask_token (e.g. for BERT it is [MASK] for for RoBERTa it is
     # <mask>, check tokenizer documentation for more details)
-    raise NotImplementedError("Please finish the TODO!")
+    
+    chosen_eighty_percent_of__masked_tokens = torch.bernoulli(torch.full(inputs.size(), 0.8).masked_fill(remaining_tokens != 1, 0))
+    inputs = inputs.masked_fill(chosen_eighty_percent_of__masked_tokens == 1, tokenizer.convert_tokens_to_ids(tokenizer.mask_token))
+    remaining_tokens = remaining_tokens.masked_fill(chosen_eighty_percent_of__masked_tokens == 1, 0)
 
     # For 10% of the time, we replace masked input tokens with random word.
     # Hint: you may find function `torch.randint` handy.
     # Hint: make sure that the random word replaced positions are not overlapping
     # with those of the masked positions, i.e. "~indices_replaced".
-    raise NotImplementedError("Please finish the TODO!")
-
+    
+    chosen_ten_percent_of__masked_tokens = torch.bernoulli(torch.full(inputs.size(), 0.1).masked_fill(remaining_tokens != 1, 0))
+    inputs = inputs.masked_fill(chosen_ten_percent_of__masked_tokens == 1, 0) + torch.randint(0, len(tokenizer), inputs.size()).masked_fill(chosen_ten_percent_of__masked_tokens != 1, 0)
+    
+    if labels_device != 'cpu':
+        labels = labels.to(labels_device)
+    if inputs_device != 'cpu':
+        inputs = inputs.to(inputs_device)
     # End of TODO
     ##################################################
 
@@ -106,11 +127,17 @@ if __name__ == "__main__":
     input_ids = tokenizer.encode(input_sentence)
     input_ids = torch.Tensor(input_ids).long().unsqueeze(0)
     
+    print('input_ids:', input_ids)
+    print('input_labels:', input_ids)
+    
     inputs, labels = mask_tokens(input_ids, tokenizer, args,
                                  special_tokens_mask=None)
     inputs, labels = list(inputs.numpy()[0]), list(labels.numpy()[0])
     ans_inputs = [101, 146, 103, 170, 103, 2377, 103, 146, 1567, 103, 2101, 119, 102]
     ans_labels = [-100, -100, 1821, -100, 1363, -100, 1105, -100, -100, 21239, -100, -100, -100]
+    
+    print('inputs:', inputs)
+    print('labels:', labels)
     
     if inputs == ans_inputs and labels == ans_labels:
         print("Your `mask_tokens` function is correct!")

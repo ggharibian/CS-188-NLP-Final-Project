@@ -1,6 +1,7 @@
-TASK_NAME="dummy"
-DATA_DIR="datasets/dummies"
-MODEL_TYPE="bert-base-cased"
+TASK_NAME="com2sense"
+DATA_DIR="datasets/com2sense"
+# MODEL_TYPE="bert-base-cased"
+MODEL_TYPE="xlm-roberta-base"
 
 
 python3 -m trainers.train \

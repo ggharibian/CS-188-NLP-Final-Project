@@ -50,7 +50,7 @@ class SemEvalDataProcessor(DataProcessor):
         #      examples.append(example_2)
         # For the guid, simply use the row number (0-
         # indexed) for each data instance.
-        raise NotImplementedError("Please finish the TODO!")
+        # raise NotImplementedError("Please finish the TODO!")
         # End of TODO.
         ##################################################
 
