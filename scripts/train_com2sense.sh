@@ -1,7 +1,9 @@
 TASK_NAME="com2sense"
 DATA_DIR="datasets/com2sense"
-MODEL_TYPE="bert-base-cased"
+# MODEL_TYPE="bert-base-cased"
 # MODEL_TYPE="xlm-roberta-base"
+MODEL_TYPE="roberta-base"
+# MODEL_TYPE="outputs/com2sense/ckpts/checkpoint-best-bert"
 
 
 python3 -m trainers.train \
@@ -12,14 +14,14 @@ python3 -m trainers.train \
   --evaluate_during_training \
   --per_gpu_train_batch_size 4 \
   --per_gpu_eval_batch_size 1 \
-  --learning_rate 1e-6 \
+  --learning_rate 1e-5 \
   --num_train_epochs 100.0 \
   --max_seq_length 128 \
   --output_dir "${TASK_NAME}/ckpts" \
   --task_name "${TASK_NAME}" \
   --data_dir "${DATA_DIR}" \
   --overwrite_output_dir \
-  --save_steps 20 \
+  --save_steps 10 \
   --logging_steps 5 \
   --warmup_steps 100 \
   --eval_split "dev" \

@@ -311,21 +311,65 @@ def train(args, train_dataset, model, tokenizer):
                     # will be overwritten each time your model reaches a best
                     # thus far evaluation results on the dev set.
                     
-                    best_model_path = os.path.join(output_dir, '..', args.model_type + '_best')
-                    old_checkpoint_exists = os.path.exists(best_model_path)
+                    # print('eval results:', results.items())
                     
-                    if old_checkpoint_exists:
-                        old_checkpoint = torch.load(best_model_path)
+                    best_model_output_dir = os.path.join(args.output_dir,
+                        "checkpoint-best-" + args.model_type)
                     
-                    if not old_checkpoint_exists or loss < old_checkpoint['loss']:
+                    # cur_loss = results["{}_loss".format(args.task_name)]
+                    f1_score = results["{}_F1_score".format(args.task_name)]
+                    
+                    # print('current loss:', cur_loss)
+                    
+                    if not os.path.exists(best_model_output_dir):
+                        # print('previous loss: NULL')
+                        os.makedirs(best_model_output_dir)
+                        model_to_save = (
+                        model.module if hasattr(model, "module") else model
+                        )  # Take care of distributed/parallel training
+                        model_to_save.save_pretrained(best_model_output_dir)
+                        tokenizer.save_pretrained(best_model_output_dir)
+
+                        torch.save(args, os.path.join(best_model_output_dir,
+                                "training_args.bin"))
+                        logger.info("Saving model checkpoint to %s", best_model_output_dir)
+
+                        torch.save(optimizer.state_dict(), os.path.join(
+                            best_model_output_dir, "optimizer.pt"))
+                        torch.save(scheduler.state_dict(), os.path.join(
+                            best_model_output_dir, "scheduler.pt"))
+                        logger.info("Saving optimizer and scheduler states to %s",
+                                    best_model_output_dir)
                         torch.save({
                             'epoch': args.num_train_epochs, 
-                            'model_state_dict': model.state_dict(), 
-                            'optimizer_state_dict': optimizer.state_dict(),
+                            'f1_score': f1_score,
                             'loss': loss
-                            }, best_model_path)
-                    
-                    
+                            }, os.path.join(best_model_output_dir, 'metrics'))
+                    else:
+                        old_metrics = torch.load(os.path.join(best_model_output_dir, 'metrics'))
+                        # print('previous loss:', old_metrics['loss'])
+                        if f1_score >= old_metrics['f1_score']:
+                            model_to_save = (
+                            model.module if hasattr(model, "module") else model
+                            )  # Take care of distributed/parallel training
+                            model_to_save.save_pretrained(best_model_output_dir)
+                            tokenizer.save_pretrained(best_model_output_dir)
+
+                            torch.save(args, os.path.join(best_model_output_dir,
+                                    "training_args.bin"))
+                            logger.info("Saving model checkpoint to %s", best_model_output_dir)
+
+                            torch.save(optimizer.state_dict(), os.path.join(
+                                best_model_output_dir, "optimizer.pt"))
+                            torch.save(scheduler.state_dict(), os.path.join(
+                                best_model_output_dir, "scheduler.pt"))
+                            logger.info("Saving optimizer and scheduler states to %s",
+                                        best_model_output_dir)
+                            torch.save({
+                                'epoch': args.num_train_epochs, 
+                                'f1_score': f1_score,
+                                'loss': loss
+                                }, os.path.join(best_model_output_dir, 'metrics'))
 
             if args.max_steps > 0 and global_step > args.max_steps:
                 epoch_iterator.close()
