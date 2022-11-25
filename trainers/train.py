@@ -316,8 +316,9 @@ def train(args, train_dataset, model, tokenizer):
                     best_model_output_dir = os.path.join(args.output_dir,
                         "checkpoint-best-" + args.model_type)
                     
-                    # cur_loss = results["{}_loss".format(args.task_name)]
+                    cur_loss = results["{}_loss".format(args.task_name)]
                     f1_score = results["{}_F1_score".format(args.task_name)]
+                    override_old_save = False
                     
                     # print('current loss:', cur_loss)
                     
@@ -343,12 +344,13 @@ def train(args, train_dataset, model, tokenizer):
                         torch.save({
                             'epoch': args.num_train_epochs, 
                             'f1_score': f1_score,
-                            'loss': loss
+                            'loss': cur_loss
                             }, os.path.join(best_model_output_dir, 'metrics'))
                     else:
                         old_metrics = torch.load(os.path.join(best_model_output_dir, 'metrics'))
                         # print('previous loss:', old_metrics['loss'])
-                        if f1_score >= old_metrics['f1_score']:
+                        if cur_loss < old_metrics['loss']:
+                        # if f1_score > old_metrics['f1_score']:
                             model_to_save = (
                             model.module if hasattr(model, "module") else model
                             )  # Take care of distributed/parallel training
@@ -368,7 +370,7 @@ def train(args, train_dataset, model, tokenizer):
                             torch.save({
                                 'epoch': args.num_train_epochs, 
                                 'f1_score': f1_score,
-                                'loss': loss
+                                'loss': cur_loss
                                 }, os.path.join(best_model_output_dir, 'metrics'))
 
             if args.max_steps > 0 and global_step > args.max_steps:
