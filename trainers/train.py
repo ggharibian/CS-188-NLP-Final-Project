@@ -216,7 +216,8 @@ def train(args, train_dataset, model, tokenizer):
                 inputs["token_type_ids"] = None
 
             if args.training_phase == "pretrain":
-                masked_inputs, lm_labels = mask_tokens(inputs["input_ids"], tokenizer, args)
+                masked_inputs, lm_labels = mask_tokens(
+                    inputs["input_ids"], tokenizer, args)
                 inputs["input_ids"] = masked_inputs
                 inputs["labels"] = lm_labels
 
@@ -502,7 +503,6 @@ def evaluate(args, model, tokenizer, prefix="", data_split="test"):
     # Organize the predictions.
     preds = np.reshape(preds, (-1, preds.shape[-1]))
     preds = np.argmax(preds, axis=-1)
-    
 
     if has_label or args.training_phase == "pretrain":
         # Computes overall average eavl loss.
@@ -738,7 +738,7 @@ def main():
 
     # Loads models onto the device (gpu or cpu).
     model.to(args.device)
-    # print(model)
+    print(model)
     args.model_type = config.model_type
 
     logger.info("Training/evaluation parameters %s", args)

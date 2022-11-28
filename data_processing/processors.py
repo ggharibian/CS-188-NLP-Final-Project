@@ -136,10 +136,7 @@ class SemEvalDataset(Dataset):
         # the outputs of tokenizer for certain types of
         # models (e.g. RoBERTa), please take special care
         # of it with an if-else statement.
-        # raise NotImplementedError("Please finish the TODO!")
-    
-    
-    
+        raise NotImplementedError("Please finish the TODO!")
         # End of TODO.
         ##################################################
 
@@ -229,9 +226,9 @@ class Com2SenseDataset(Dataset):
         if not self.args.do_train:
             if label is None:
                 return input_ids, attention_mask, token_type_ids, guid
-            return input_ids, attention_mask, token_type_ids, labels#, int(guid), domain, scenario, numeracy
+            return input_ids, attention_mask, token_type_ids, labels, int(guid)#, domain, scenario, numeracy
 
-        return input_ids, attention_mask, token_type_ids, labels#, int(guid), domain, scenario, numeracy
+        return input_ids, attention_mask, token_type_ids, labels, int(guid)#, domain, scenario, numeracy
 
 
 if __name__ == "__main__":

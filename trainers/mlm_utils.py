@@ -44,7 +44,7 @@ def mask_tokens(inputs, tokenizer, args, special_tokens_mask=None):
     ##################################################
     # Optional TODO: this is an optional TODO that can get you more familiarized
     # with masked language modeling.
-    
+
     # First sample a few tokens in each sequence for the MLM, with probability
     # `args.mlm_probability`.
     # Hint: you may find these functions handy: `torch.full`, Tensor's built-in
@@ -140,17 +140,11 @@ if __name__ == "__main__":
     input_ids = tokenizer.encode(input_sentence)
     input_ids = torch.Tensor(input_ids).long().unsqueeze(0)
     
-    print('input_ids:', input_ids)
-    print('input_labels:', input_ids)
-    
     inputs, labels = mask_tokens(input_ids, tokenizer, args,
                                  special_tokens_mask=None)
     inputs, labels = list(inputs.numpy()[0]), list(labels.numpy()[0])
     ans_inputs = [101, 146, 103, 170, 103, 2377, 103, 146, 1567, 103, 2101, 119, 102]
     ans_labels = [-100, -100, 1821, -100, 1363, -100, 1105, -100, -100, 21239, -100, -100, -100]
-    
-    print('inputs:', inputs)
-    print('labels:', labels)
     
     if inputs == ans_inputs and labels == ans_labels:
         print("Your `mask_tokens` function is correct!")
