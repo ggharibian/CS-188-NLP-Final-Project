@@ -236,9 +236,6 @@ def train(args, train_dataset, model, tokenizer):
 
             # Handles the `gradient_accumulation_steps`, i.e., every such
             # steps we update the model, so the loss needs to be derived.
-            
-            if step % args.gradient_accumulation_steps == 0:
-                optimizer.step()
     
             # Loss backward.
             
