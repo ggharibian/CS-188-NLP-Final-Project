@@ -345,6 +345,7 @@ def train(args, train_dataset, model, tokenizer):
                             torch.save({
                                 'epoch': args.num_train_epochs, 
                                 'f1_score': f1_score,
+                                'accuracy': accuracy,
                                 'loss': cur_loss
                                 }, os.path.join(best_model_output_dir, 'metrics'))
                         else:
@@ -372,6 +373,7 @@ def train(args, train_dataset, model, tokenizer):
                                 torch.save({
                                     'epoch': args.num_train_epochs, 
                                     'f1_score': f1_score,
+                                    'accuracy': accuracy,
                                     'loss': cur_loss
                                     }, os.path.join(best_model_output_dir, 'metrics'))
 
