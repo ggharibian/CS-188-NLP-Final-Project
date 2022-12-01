@@ -319,7 +319,7 @@ def train(args, train_dataset, model, tokenizer):
                         
                         cur_loss = cur_results["{}_loss".format(args.task_name)]
                         f1_score = cur_results["{}_F1_score".format(args.task_name)]
-                        override_old_save = False
+                        accuracy = cur_results["{}_accuracy".format(args.task_name)]
                         
                         # print('current loss:', cur_loss)
                         
@@ -350,8 +350,9 @@ def train(args, train_dataset, model, tokenizer):
                         else:
                             old_metrics = torch.load(os.path.join(best_model_output_dir, 'metrics'))
                             # print('previous loss:', old_metrics['loss'])
-                            if cur_loss < old_metrics['loss']:
+                            # if cur_loss < old_metrics['loss']:
                             # if f1_score > old_metrics['f1_score']:
+                            if accuracy > old_metrics['accuracy']:
                                 model_to_save = (
                                 model.module if hasattr(model, "module") else model
                                 )  # Take care of distributed/parallel training
