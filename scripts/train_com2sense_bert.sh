@@ -10,7 +10,6 @@ MODEL_TYPE="outputs/com2sense/ckpts/checkpoint-best-bert/"
 python3 -m trainers.train \
   --model_name_or_path ${MODEL_TYPE} \
   --do_not_load_optimizer \
-  --do_train \
   --do_eval \
   --evaluate_during_training \
   --per_gpu_train_batch_size 8 \
@@ -25,9 +24,9 @@ python3 -m trainers.train \
   --save_steps 10 \
   --logging_steps 10 \
   --warmup_steps 100 \
-  --eval_split "dev" \
+  --eval_split "test" \
   --score_average_method "binary" \
-  --iters_to_eval 20 40 \
-  --overwrite_output_dir \
-  --eval_split "dev" \
+  --eval_all_checkpoints \
+  # --iters_to_eval 20 40 \
+  # --do_train \
   # --max_eval_steps 1000 \
