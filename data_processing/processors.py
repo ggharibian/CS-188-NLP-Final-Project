@@ -225,7 +225,7 @@ class Com2SenseDataset(Dataset):
 
         if not self.args.do_train:
             if label is None:
-                return input_ids, attention_mask, token_type_ids, guid
+                return input_ids, attention_mask, token_type_ids, int(guid)
             return input_ids, attention_mask, token_type_ids, labels, int(guid)#, domain, scenario, numeracy
 
         return input_ids, attention_mask, token_type_ids, labels, int(guid)#, domain, scenario, numeracy
