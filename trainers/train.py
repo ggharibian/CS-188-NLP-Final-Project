@@ -465,15 +465,20 @@ def evaluate(args, model, tokenizer, prefix="", data_split="test"):
             # Make sure to perform a `.mean()` on the eval loss and add it
             # to the `eval_loss` variable.
 
-            
-            pred = model(inputs['input_ids'], inputs['attention_mask'], labels = inputs['labels'])
-            loss, logits = pred[:2]
-            
-            if args.n_gpu > 1:
-                # Applies mean() to average on multi-gpu parallel training.
-                loss = loss.mean()       
+            if 'labels' in inputs:
+                pred = model(inputs['input_ids'], inputs['attention_mask'], labels = inputs['labels'])
+                loss, logits = pred[:2]
+            else:
+                pred = model(inputs['input_ids'], inputs['attention_mask'])
+                loss, logits = None, pred[0]
+
                 
-            eval_loss = eval_loss + loss
+            if loss is not None:
+                if args.n_gpu > 1:
+                    # Applies mean() to average on multi-gpu parallel training.
+                    loss = loss.mean()       
+                
+                eval_loss = eval_loss + loss
 
             # TODO: Handles the logits with Softmax properly.
 
