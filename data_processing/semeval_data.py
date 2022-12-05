@@ -50,10 +50,33 @@ class SemEvalDataProcessor(DataProcessor):
         #      examples.append(example_2)
         # For the guid, simply use the row number (0-
         # indexed) for each data instance.
-        # raise NotImplementedError("Please finish the TODO!")
+
+        csv_path = os.path.join(data_dir, split+".csv")
+        
+        df = pd.read_csv(csv_path, delimiter=',')
+        
+        examples = []
+        
+        label_is_none = (split == 'test')
+        
+        for index, row in df.iterrows():
+            correct_statement = row['Correct Statement']
+            incorrect_statement = row['Incorrect Statement']
+            right_reason_1 = row['Right Reason1'] if 'Right Reason1' in row else None
+            right_reason_2 = row['Right Reason2'] if 'Right Reason2' in row else None
+            right_reason_3 = row['Right Reason3'] if 'Right Reason3' in row else None
+            confusing_reason_1 = row['Confusing Reason1'] if 'Confusing Reason1' in row else None
+            confusing_reason_2 = row['Confusing Reason2'] if 'Confusing Reason2' in row else None
+            
+            correct_example = SemEvalSingleSentenceExample(guid=str(index), text=correct_statement, label=1 if not label_is_none else None, right_reason1=right_reason_1, right_reason2=right_reason_2, right_reason3=right_reason_3, confusing_reason1=confusing_reason_1, confusing_reason2=confusing_reason_2)
+            incorrect_example = SemEvalSingleSentenceExample(guid=str(index), text=incorrect_statement, label=0 if not label_is_none else None, right_reason1=right_reason_1, right_reason2=right_reason_2, right_reason3=right_reason_3, confusing_reason1=confusing_reason_1, confusing_reason2=confusing_reason_2)
+            
+            examples.append(correct_example)
+            examples.append(incorrect_example)
+        
         # End of TODO.
         ##################################################
-
+        
         return examples
 
     def get_train_examples(self, data_dir=None):
