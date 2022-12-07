@@ -10,6 +10,8 @@ from typing import List, Optional, Union
 import tqdm
 import numpy as np
 
+from sklearn.metrics import accuracy_score
+
 import torch
 from transformers import (
     WEIGHTS_NAME,
@@ -43,6 +45,32 @@ def pairwise_accuracy(guids, preds, labels):
     ########################################################
      
     return acc
+
+def subgroup_accuracies(preds, labels, groups):
+
+    acc = 0.0  # The accuracy to return.
+    
+    ########################################################
+    # TODO: Please finish the pairwise accuracy computation.
+    # Hint: Utilize the `guid` as the `guid` for each
+    # statement coming from the same complementary
+    # pair is identical. You can simply pair the these
+    # predictions and labels w.r.t the `guid`. 
+    
+    group_set = set(groups)
+    combined_arr = np.concatenate((np.array([preds]), np.array([labels]), np.array([groups])))
+    
+    group_accuracies = {}
+    
+    for group in group_set:
+        group_vals = combined_arr[combined_arr[:,2] == group]
+        group_preds, group_labels = group_vals[:,0], group_vals[:,1]
+        group_accuracies[group] = accuracy_score(group_labels, group_preds)
+        
+    # End of TODO
+    ########################################################
+     
+    return group_accuracies
 
 
 if __name__ == "__main__":

@@ -216,6 +216,9 @@ class Com2SenseDataset(Dataset):
         example = self.examples[idx]
         guid = example.guid
         text = example.text
+        domain = example.domain
+        scenario = example.scenario
+        numeracy = example.numeracy
 
         batch_encoding = self.tokenizer(
             text=text,
@@ -241,10 +244,10 @@ class Com2SenseDataset(Dataset):
 
         if not self.args.do_train:
             if label is None:
-                return input_ids, attention_mask, token_type_ids, int(guid)
-            return input_ids, attention_mask, token_type_ids, labels, int(guid)#, domain, scenario, numeracy
+                return input_ids, attention_mask, token_type_ids, int(guid), domain, scenario, numeracy
+            return input_ids, attention_mask, token_type_ids, labels, int(guid), domain, scenario, numeracy
 
-        return input_ids, attention_mask, token_type_ids, labels, int(guid)#, domain, scenario, numeracy
+        return input_ids, attention_mask, token_type_ids, labels, int(guid), domain, scenario, numeracy
 
 
 if __name__ == "__main__":

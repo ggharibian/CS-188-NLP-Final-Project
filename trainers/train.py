@@ -46,7 +46,7 @@ from transformers import (
 from .args import get_args
 from data_processing import data_processors, data_classes
 from .mlm_utils import mask_tokens
-from .train_utils import pairwise_accuracy
+from .train_utils import pairwise_accuracy, subgroup_accuracies
 
 # Tensorboard utilities.
 try:
@@ -419,6 +419,9 @@ def evaluate(args, model, tokenizer, prefix="", data_split="test"):
     nb_eval_steps = 0
     preds = None
     labels = None
+    domains = None
+    scenarios = None
+    numeracies = None
     has_label = False
 
     guids = []
@@ -440,7 +443,17 @@ def evaluate(args, model, tokenizer, prefix="", data_split="test"):
             if (args.do_train and len(batch) > 3) or (not args.do_train and len(batch) > 4):
                 has_label = True
                 inputs["labels"] = batch[3]
-
+                
+            if args.task_name == "com2sense":
+                if not has_label:
+                    inputs['domain'] = batch[4]
+                    inputs['scenario'] = batch[5]
+                    inputs['numeracy'] = batch[6]
+                else:
+                    inputs['domain'] = batch[5]
+                    inputs['scenario'] = batch[6]
+                    inputs['numeracy'] = batch[7]
+                
             # Clears token type ids if using MLM-based models.
             if args.model_type != "distilbert":
                 inputs["token_type_ids"] = (
@@ -492,13 +505,19 @@ def evaluate(args, model, tokenizer, prefix="", data_split="test"):
             ##################################################
 
         nb_eval_steps += 1
-
+            
         if preds is None:
             preds = logits.detach().cpu().numpy()
+            domains = inputs['domain'].detach().cpu().numpy()
+            scenarios = inputs['scenario'].detach().cpu().numpy()
+            numeracies = inputs['numeracy'].detach().cpu().numpy()
             if has_label:
                 labels = inputs["labels"].detach().cpu().numpy()
         else:
             preds = np.append(preds, logits.detach().cpu().numpy(), axis=0)
+            domains = np.append(domains, inputs['domain'].detach().cpu().numpy())
+            scenarios = np.append(scenarios, inputs['scenario'].detach().cpu().numpy())
+            numeracies = np.append(numeracies, inputs['numeracy'].detach().cpu().numpy())
             if has_label:
                 labels = np.append(labels,
                     inputs["labels"].detach().cpu().numpy(), axis=0)
@@ -549,6 +568,17 @@ def evaluate(args, model, tokenizer, prefix="", data_split="test"):
             if args.task_name == "com2sense":
 
                 eval_pairwise_acc = pairwise_accuracy(guids, preds, labels)
+                domain_acc = subgroup_accuracies(preds, labels, domains)
+                scenario_acc = subgroup_accuracies(preds, labels, scenarios)
+                numeracy_acc = subgroup_accuracies(preds, labels, numeracies)
+                
+                physical_domain_acc = domain_acc[1]
+                social_domain_acc = domain_acc[2]
+                temporal_domain_acc = domain_acc[3]
+                comparison_scenario_acc = scenario_acc[1]
+                causal_scenario_acc = scenario_acc[2]
+                true_numeracy_acc = numeracy_acc[1]
+                false_numeracy_acc = numeracy_acc[0]
                 
 
         # End of TODO.
@@ -564,6 +594,13 @@ def evaluate(args, model, tokenizer, prefix="", data_split="test"):
             # Pairwise accuracy.
             if args.task_name == "com2sense":
                 eval_acc_dict["{}_pairwise_accuracy".format(args.task_name)] = eval_pairwise_acc
+                eval_acc_dict["{}_physical_domain_accuracy".format(args.task_name)] = physical_domain_acc
+                eval_acc_dict["{}_social_domain_accuracy".format(args.task_name)] = social_domain_acc
+                eval_acc_dict["{}_temporal_domain_accuracy".format(args.task_name)] = temporal_domain_acc
+                eval_acc_dict["{}_comparison_scenario_accuracy".format(args.task_name)] = comparison_scenario_acc
+                eval_acc_dict["{}_causal_scenario_accuracy".format(args.task_name)] = causal_scenario_acc
+                eval_acc_dict["{}_true_numeracy_accuracy".format(args.task_name)] = true_numeracy_acc
+                eval_acc_dict["{}_false_numeracy_accuracy".format(args.task_name)] = false_numeracy_acc
 
         results.update(eval_acc_dict)
 
