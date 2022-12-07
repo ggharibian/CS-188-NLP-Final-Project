@@ -579,7 +579,6 @@ def evaluate(args, model, tokenizer, prefix="", data_split="test"):
                 causal_scenario_acc = scenario_acc[2]
                 true_numeracy_acc = numeracy_acc[1]
                 false_numeracy_acc = numeracy_acc[0]
-                
 
         # End of TODO.
         ##################################################

@@ -58,9 +58,14 @@ def subgroup_accuracies(preds, labels, groups):
     # predictions and labels w.r.t the `guid`. 
     
     group_set = set(groups)
-    combined_arr = np.concatenate((np.array([preds]), np.array([labels]), np.array([groups])))
+    combined_arr = np.transpose(np.concatenate((np.array([preds]), np.array([labels]), np.array([groups])), axis=0))
     
     group_accuracies = {}
+    
+    # print('preds:', preds)
+    # print('labels:', labels)
+    # print('groups:', groups)
+    # print('combined_array:', np.info(combined_arr))
     
     for group in group_set:
         group_vals = combined_arr[combined_arr[:,2] == group]
@@ -69,6 +74,8 @@ def subgroup_accuracies(preds, labels, groups):
         
     # End of TODO
     ########################################################
+    
+    # raise NotImplementedError('')
      
     return group_accuracies
 
